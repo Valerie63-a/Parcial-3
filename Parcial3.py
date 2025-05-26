@@ -1,167 +1,174 @@
 import datetime
-import time
 
-class Parqueadero:
-    TARIFAS = {
-        "MOTO": 50,
-        "VEHICULO": 100,
-        "DISCAPACITADO": 45,
-        "ELECTRICO": 110
-    }
-    SIMBOLOS = {
-        "MOTO": "M",
-        "VEHICULO": "C",
-        "DISCAPACITADO": "D",
-        "ELECTRICO": "E"
-    }
+TARIFAS = {
+    "MOTO": 50,
+    "VEHICULO": 100,
+    "DISCAPACITADO": 45,
+    "ELECTRICO": 110
+}
 
-    def __init__(self, filas=8, columnas=8):
-        self.filas = filas
-        self.columnas = columnas
-        self.mapa = [[0 for _ in range(columnas)] for _ in range(filas)]
-        self.vehiculos = {}
-        self.inicializar_mapa()
-        
-    def inicializar_mapa(self):
-        for i in range(self.filas):
-            for j in range(self.columnas):
-                if j == 0 or j == self.columnas-1 or i == 0 or i == self.filas-1:
-                    self.mapa[i][j] = 2 
-                elif j % 2 == 0 and i > 1 and i < self.filas-2:
-                    self.mapa[i][j] = 2 
-                elif i % 2 == 1 and j > 0 and j < self.columnas-1 and self.mapa[i][j] != 2:
-                    self.mapa[i][j] = 1  
-        self.entrada = (self.filas//2, 0)
-        self.salida = (self.filas//2, self.columnas-1)
-        self.mapa[self.entrada[0]][self.entrada[1]] = 4
-        self.mapa[self.salida[0]][self.salida[1]] = 5
+EMOJIS = {
+    "MOTO": "🛵",
+    "VEHICULO": "🚗",
+    "DISCAPACITADO": "♿",
+    "ELECTRICO": "🔌",
+    "VIA": "⬛",
+    "LIBRE": "⬜",
+    "ENTRADA": "🚪",
+    "SALIDA": "🚪"
+}
 
-    def mostrar_mapa(self):
-        print("\nMapa del Parqueadero:")
-        print("Leyenda:")
-        print("E = Entrada | S = Salida | V = Vía | _ = Libre | M = Moto | C = Carro | D = Discapacitado | E = Eléctrico")
-        print("-" * (self.columnas * 3 + 1))
-        for i, fila in enumerate(self.mapa):
-            print("|", end="")
-            for j, celda in enumerate(fila):
-                if celda == 0:
-                    print("   ", end="|")
-                elif celda == 1:
-                    print(" _ ", end="|")  
-                elif celda == 2:
-                    print(" V ", end="|")  
-                elif celda == 4:
-                    print(" E ", end="|")  
-                elif celda == 5:
-                    print(" S ", end="|") 
-                elif isinstance(celda, dict):
-                    tipo = celda.get("tipo", "VEHICULO")
-                    print(f" {self.SIMBOLOS.get(tipo, 'C')} ", end="|")
-                else:
-                    print(" ? ", end="|")
-            print("\n" + "-" * (self.columnas * 3 + 1))
+filas = 9
+columnas = 9
+mapa = []
+vehiculos = {}
+entrada = (filas // 2, 0)
+salida = (filas // 2, columnas - 1)
 
-    def encontrar_espacio_libre(self):
-        for i in range(self.filas):
-            for j in range(self.columnas):
-                if self.mapa[i][j] == 1:  
-                    return (i, j)
+def inicializar_mapa():
+    global mapa, entrada, salida
+    mapa = [[0 for _ in range(columnas)] for _ in range(filas)]
+    for i in range(filas):
+        for j in range(columnas):
+            if j == 0 or j == columnas - 1 or i == 0 or i == filas - 1:
+                mapa[i][j] = 2
+            elif j % 2 == 0 and 1 < i < filas - 2:
+                mapa[i][j] = 2
+            elif i % 2 == 1 and 0 < j < columnas - 1 and mapa[i][j] != 2:
+                mapa[i][j] = 1
+    mapa[entrada[0]][entrada[1]] = 4
+    mapa[salida[0]][salida[1]] = 5
+
+def mostrar_mapa():
+    print("\nMapa del Parqueadero:")
+    print("Leyenda:")
+    print(f"{EMOJIS['ENTRADA']} = Entrada  {EMOJIS['SALIDA']} = Salida  {EMOJIS['VIA']} = Vía")
+    print(f"{EMOJIS['LIBRE']} = Libre  {EMOJIS['MOTO']} = Moto  {EMOJIS['VEHICULO']} = Carro")
+    print(f"{EMOJIS['DISCAPACITADO']} = Discapacitado  {EMOJIS['ELECTRICO']} = Eléctrico")
+    print("-" * (columnas * 3 + 1))
+    for fila in mapa:
+        print("", end="")
+        for celda in fila:
+            if celda == 0:
+                print("   ", end=" ")
+            elif celda == 1:
+                print(f" {EMOJIS['LIBRE']} ", end=" ")
+            elif celda == 2:
+                print(f" {EMOJIS['VIA']} ", end=" ")
+            elif celda == 4:
+                print(f" {EMOJIS['ENTRADA']} ", end=" ")
+            elif celda == 5:
+                print(f" {EMOJIS['SALIDA']} ", end=" ")
+            elif isinstance(celda, dict):
+                tipo = celda.get("tipo", "VEHICULO")
+                print(f" {EMOJIS.get(tipo, EMOJIS['VEHICULO'])} ", end=" ")
+            else:
+                print(" ? ", end=" ")
+        print("\n" + "-" * (columnas * 3 + 1))
+
+def encontrar_espacio_libre():
+    for i in range(filas):
+        for j in range(columnas):
+            if mapa[i][j] == 1:
+                return (i, j)
+    return None
+
+def registrar_entrada(placa, tipo):
+    global mapa, vehiculos
+    tipo = tipo.upper()
+    if tipo not in TARIFAS:
+        print("\nTipo de vehículo no válido.")
+        return False
+    espacio = encontrar_espacio_libre()
+    if espacio:
+        mapa[espacio[0]][espacio[1]] = {"tipo": tipo, "placa": placa}
+        hora_entrada = datetime.datetime.now()
+        vehiculos[placa] = {
+            'espacio': espacio,
+            'hora_entrada': hora_entrada,
+            'hora_salida': None,
+            'valor_pagado': None,
+            'tipo': tipo
+        }
+        print(f"\nVehículo {placa} ({tipo}) registrado en espacio {espacio} a las {hora_entrada}")
+        return True
+    else:
+        print("\nNo hay espacios disponibles")
+        return False
+
+def registrar_salida(placa):
+    global mapa, vehiculos
+    if placa in vehiculos:
+        vehiculo = vehiculos[placa]
+        hora_salida = datetime.datetime.now()
+        tiempo_estacionado = hora_salida - vehiculo['hora_entrada']
+        horas = tiempo_estacionado.total_seconds() / 3600
+        tarifa = TARIFAS.get(vehiculo['tipo'], 100)
+        valor_a_pagar = round(horas * tarifa)
+        espacio = vehiculo['espacio']
+        mapa[espacio[0]][espacio[1]] = 1
+        vehiculo['hora_salida'] = hora_salida
+        vehiculo['valor_pagado'] = valor_a_pagar
+        print(f"\nVehículo {placa} ({vehiculo['tipo']}) salió del espacio {espacio}")
+        print(f"Tiempo estacionado: {str(tiempo_estacionado).split('.')[0]}")
+        print(f"Valor a pagar: ${valor_a_pagar} (Tarifa: {tarifa}/h)")
+        return valor_a_pagar
+    else:
+        print(f"\nVehículo {placa} no encontrado en el parqueadero")
         return None
 
-    def registrar_entrada(self, placa, tipo):
-        tipo = tipo.upper()
-        if tipo not in self.TARIFAS:
-            print("\nTipo de vehículo no válido.")
-            return False
-        espacio = self.encontrar_espacio_libre()
-        if espacio:
-            self.mapa[espacio[0]][espacio[1]] = {"tipo": tipo, "placa": placa}
-            hora_entrada = datetime.datetime.now()
-            self.vehiculos[placa] = {
-                'espacio': espacio,
-                'hora_entrada': hora_entrada,
-                'hora_salida': None,
-                'valor_pagado': None,
-                'tipo': tipo
-            }
-            print(f"\nVehículo {placa} ({tipo}) registrado en espacio {espacio} a las {hora_entrada}")
-            return True
-        else:
-            print("\nNo hay espacios disponibles")
-            return False
-
-    def registrar_salida(self, placa):
-        if placa in self.vehiculos:
-            vehiculo = self.vehiculos[placa]
-            hora_salida = datetime.datetime.now()
-            tiempo_estacionado = hora_salida - vehiculo['hora_entrada']
-            horas = tiempo_estacionado.total_seconds() / 3600
-            tipo = vehiculo['tipo']
-            tarifa = self.TARIFAS.get(tipo, 100)
-            valor_a_pagar = round(horas * tarifa)
-            espacio = vehiculo['espacio']
-            self.mapa[espacio[0]][espacio[1]] = 1 
-            vehiculo['hora_salida'] = hora_salida
-            vehiculo['valor_pagado'] = valor_a_pagar
-            print(f"\nVehículo {placa} ({tipo}) salió del espacio {espacio}")
-            print(f"Tiempo estacionado: {str(tiempo_estacionado).split('.')[0]}")
-            print(f"Valor a pagar: ${valor_a_pagar} (Tarifa: {tarifa}/h)")
-            return valor_a_pagar
-        else:
-            print(f"\nVehículo {placa} no encontrado en el parqueadero")
-            return None
-
-    def mostrar_disponibilidad(self):
-        libres = 0
-        ocupados = 0
-        for fila in self.mapa:
-            for celda in fila:
-                if celda == 1:
-                    libres += 1
-                elif isinstance(celda, dict):
-                    ocupados += 1
-        total = libres + ocupados
-        print(f"\nEspacios libres: {libres}")
-        print(f"Espacios ocupados: {ocupados}")
-        print(f"Total espacios: {total}")
-        if total > 0:
-            print(f"Porcentaje de ocupación: {(ocupados/total)*100:.1f}%")
-        else:
-            print("No hay espacios configurados.")
+def mostrar_disponibilidad():
+    libres = 0
+    ocupados = 0
+    for fila in mapa:
+        for celda in fila:
+            if celda == 1:
+                libres += 1
+            elif isinstance(celda, dict):
+                ocupados += 1
+    total = libres + ocupados
+    print(f"\nEspacios libres: {libres}")
+    print(f"Espacios ocupados: {ocupados}")
+    print(f"Total espacios: {total}")
+    if total > 0:
+        print(f"Porcentaje de ocupación: {(ocupados / total) * 100:.1f}%")
+    else:
+        print("No hay espacios configurados.")
 
 def mostrar_menu():
-    print("\n--- Sistema de Gestión de Parqueadero ---")
+    print("\n Sistema de Gestión de Parqueadero - michicaar")
+    print("Selecciona una opción, por favor:")
     print("1. Mostrar mapa del parqueadero")
     print("2. Registrar entrada de vehículo")
     print("3. Registrar salida de vehículo")
     print("4. Mostrar disponibilidad")
     print("5. Salir")
-    print("Tarifas: Moto $50/h | Vehículo $100/h | Discapacitado $45/h | Eléctrico $110/h")
+    print(f"Tarifas: Moto ${TARIFAS['MOTO']}/h | Vehículo ${TARIFAS['VEHICULO']}/h | Discapacitado ${TARIFAS['DISCAPACITADO']}/h | Eléctrico ${TARIFAS['ELECTRICO']}/h")
     try:
         return int(input("Selecciona una opción: "))
-    except:
+    except ValueError:
         return 0
-
+    
 if __name__ == "__main__":
-    usuario = input("¡Bienvenido a michicaar! por favor ingresa tu nombre: ")
+    usuario = input("¡Bienvenido a michicaar! Por favor ingresa tu nombre: ")
     print(f"\nHola {usuario}, bienvenido al sistema de gestión de parqueadero.")
-    parqueadero = Parqueadero(9, 9) 
+    inicializar_mapa()
     while True:
         opcion = mostrar_menu()
         if opcion == 1:
-            parqueadero.mostrar_mapa()
+            mostrar_mapa()
         elif opcion == 2:
             placa = input("Ingresa la placa del vehículo: ")
             print("Tipos: Moto, Vehiculo, Discapacitado, Electrico")
             tipo = input("Ingresa el tipo de vehículo: ")
-            parqueadero.registrar_entrada(placa, tipo)
+            registrar_entrada(placa, tipo)
         elif opcion == 3:
             placa = input("Ingresa la placa del vehículo: ")
-            parqueadero.registrar_salida(placa)
+            registrar_salida(placa)
         elif opcion == 4:
-            parqueadero.mostrar_disponibilidad()
+            mostrar_disponibilidad()
         elif opcion == 5:
-            print(f"\nGracias por usar el sistema de michicaar, {usuario}!!! ¡Hasta luego!")
+            print(f"\nGracias por usar el sistema de michicaar, {usuario}. ¡Hasta luego!")
             break
         else:
             print("\nOpción no válida. Intenta nuevamente.")

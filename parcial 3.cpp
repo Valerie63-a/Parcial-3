@@ -8,12 +8,8 @@
 #include <algorithm>
 
 using namespace std;
-
-// 🌸 Kawaii Type Definitions
 enum class Type { FIRE, WATER, GRASS, ELECTRIC, GROUND, NORMAL };
 const string TypeNames[] = { "Fire~ 🔥", "Water~ 💧", "Grass~ 🌿", "Electric~ ⚡", "Ground~ 🌍", "Normal~" };
-
-// 🎀 Status Effects with Cute Messages
 enum class Status { NONE, BURNED, PARALYZED, POISONED };
 const string StatusMessages[] = {
     "", 
@@ -21,18 +17,16 @@ const string StatusMessages[] = {
     "can't move! (≧﹏≦)", 
     "takes poison damage! ;_;"
 };
-
-// 💖 Type Matchups
 map<pair<Type, Type>, float> typeMatchup = {
-    {{Type::FIRE, Type::GRASS}, 2.0f},    // Fire burns Grass~
-    {{Type::FIRE, Type::WATER}, 0.5f},    // Water puts out Fire...
-    {{Type::WATER, Type::FIRE}, 2.0f},    // Water beats Fire!
-    {{Type::WATER, Type::GROUND}, 2.0f},  // Water erodes Ground!
-    {{Type::GRASS, Type::WATER}, 2.0f},   // Grass absorbs Water~
-    {{Type::GRASS, Type::GROUND}, 2.0f},  // Grass covers Ground~
-    {{Type::ELECTRIC, Type::WATER}, 2.0f},// Zappy Water!
-    {{Type::ELECTRIC, Type::GROUND}, 0.0f},// Ground blocks Electricity~
-    {{Type::GROUND, Type::FIRE}, 2.0f}    // Ground smothers Fire~
+    {{Type::FIRE, Type::GRASS}, 2.0f}, 
+    {{Type::FIRE, Type::WATER}, 0.5f},
+    {{Type::WATER, Type::FIRE}, 2.0f},
+    {{Type::WATER, Type::GROUND}, 2.0f},
+    {{Type::GRASS, Type::WATER}, 2.0f},
+    {{Type::GRASS, Type::GROUND}, 2.0f},
+    {{Type::ELECTRIC, Type::WATER}, 2.0f},
+    {{Type::ELECTRIC, Type::GROUND}, 0.0f},
+    {{Type::GROUND, Type::FIRE}, 2.0f}
 };
 
 class Move {
@@ -140,13 +134,13 @@ public:
 
     bool canAttack() const {
         if (status == Status::PARALYZED) {
-            return (rand() % 100) < 75; // 25% chance to be fully paralyzed
+            return (rand() % 100) < 75;
         }
         return true;
     }
 
     void applyStatus(Status newStatus) {
-        if (status == Status::NONE && (rand() % 100) < 70) { // 30% chance to resist
+        if (status == Status::NONE && (rand() % 100) < 70) {
             status = newStatus;
             cout << nickname << " got " << StatusMessages[(int)status] << endl;
         }
@@ -184,8 +178,6 @@ public:
     void displayStatus() const {
         cout << "\n♡ " << nickname << " the " << species << " ♡";
         cout << "\nLv." << level << " [" << TypeNames[(int)type] << "]";
-        
-        // Kawaii health bar
         cout << "\nHP: ";
         int bars = static_cast<int>((static_cast<float>(hp) / maxHP) * 10);
         for (int i = 0; i < 10; i++) {
@@ -244,28 +236,16 @@ private:
             cout << attacker->getNickname() << "'s attack missed! (´；ω；｀)" << endl;
             return 0;
         }
-
-        // STAB (Same Type Attack Bonus)
         float stab = (move->getType() == attacker->getType()) ? 1.5f : 1.0f;
-        
-        // Type effectiveness
         float effectiveness = getTypeEffectiveness(move->getType(), defender->getType());
-        
-        // Critical hit (6.25% chance)
         bool isCritical = (rand() % 16) == 0;
         float critical = isCritical ? 1.5f : 1.0f;
-        
-        // Damage calculation
         int damage = (((2 * attacker->getLevel() / 5 + 2) * move->getPower() * attacker->getAttack() / defender->getDefense()) / 50 + 2);
         damage = static_cast<int>(damage * stab * effectiveness * critical);
-        
-        // Apply protection
         if (defender->isProtected()) {
             damage /= 2;
             cout << defender->getNickname() << "'s protection reduced damage! 🛡️" << endl;
         }
-
-        // Display battle messages
         if (effectiveness > 1.0f) {
             cout << "It's super effective! (★ω★)/" << endl;
         } else if (effectiveness < 1.0f && effectiveness > 0.0f) {
@@ -310,8 +290,6 @@ private:
                 if (damage > 0) {
                     opponent->takeDamage(damage);
                     cout << player->getNickname() << " used " << selectedMove->getName() << " and dealt " << damage << " damage! (ﾉ◕ヮ◕)ﾉ*:･ﾟ✧" << endl;
-                    
-                    // Check for status effect
                     if (selectedMove->getEffect() != Status::NONE && 
                         (rand() % 100) < (selectedMove->getEffectChance() * 100)) {
                         opponent->applyStatus(selectedMove->getEffect());
@@ -325,8 +303,6 @@ private:
 
     void opponentTurn() {
         cout << "\n=== " << opponent->getNickname() << "'s Turn ===" << endl;
-        
-        // Simple AI: 20% chance to protect if possible, otherwise random move
         if ((rand() % 5) == 0 && opponent->getMoves().size() < 4) {
             opponent->protect();
             cout << opponent->getNickname() << " is protecting itself! 🛡️" << endl;
@@ -339,8 +315,6 @@ private:
                 if (damage > 0) {
                     player->takeDamage(damage);
                     cout << opponent->getNickname() << " used " << selectedMove->getName() << " and dealt " << damage << " damage! (╥﹏╥)" << endl;
-                    
-                    // Check for status effect
                     if (selectedMove->getEffect() != Status::NONE && 
                         (rand() % 100) < (selectedMove->getEffectChance() * 100)) {
                         player->applyStatus(selectedMove->getEffect());
@@ -359,7 +333,6 @@ private:
 
 public:
     Battle(Pokemon* p1, Pokemon* p2) : player(p1), opponent(p2), turnCount(1) {
-        // Determine who goes first based on speed
         if (player->getSpeed() < opponent->getSpeed()) {
             swap(player, opponent);
         }
@@ -371,12 +344,8 @@ public:
 
         while (!player->isFainted() && !opponent->isFainted()) {
             cout << "\n=== Turn " << turnCount << " ===" << endl;
-            
-            // Reset protection status
             player->resetProtection();
             opponent->resetProtection();
-            
-            // Player turn
             if (!player->isFainted() && player->canAttack()) {
                 playerTurn();
             } else if (!player->canAttack()) {
@@ -384,27 +353,19 @@ public:
             }
             
             if (opponent->isFainted()) break;
-            
-            // Opponent turn
             if (!opponent->isFainted() && opponent->canAttack()) {
                 opponentTurn();
             } else if (!opponent->canAttack()) {
                 cout << opponent->getNickname() << " can't move! (≧﹏≦)" << endl;
             }
-            
-            // Apply status effects at end of turn
             player->applyStatusEffects();
             opponent->applyStatusEffects();
             
             turnCount++;
-            
-            // Pause between turns
             cout << "\nPress Enter to continue...";
             clearInput();
             cin.get();
         }
-        
-        // Battle result
         cout << "\n✨✨✨ BATTLE END! ✨✨✨" << endl;
         if (player->isFainted()) {
             cout << opponent->getNickname() << " wins! (ﾉ>ω<)ﾉ" << endl;

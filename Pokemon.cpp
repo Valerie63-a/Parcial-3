@@ -444,7 +444,7 @@ Pokemon* selectPlayerPokemon() {
         cin >> choice;
         
         if (cin.fail() || choice < 0 || choice > 5) {
-            cout << "Invalid choice! Please select a number from 0 to 5." << endl;
+            cout << "Invalid choice pipipi! Please select a number from 0 to 5." << endl;
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
             continue;
@@ -476,7 +476,7 @@ Pokemon* selectOpponentPokemon() {
 int main() {
     srand(time(0));
     
-    cout << "🎀 Pokémon Battle System 🎀" << endl;
+    cout << "♥ Pokémon Battle System ♥" << endl;
     cout << "------------------" << endl;
     
     Pokemon* player = selectPlayerPokemon();
@@ -491,3 +491,4 @@ int main() {
     cout << "\nThanks for playing! (ﾉ´ヮ`)ﾉ*: ･ﾟ" << endl;
     return 0;
 }
+
